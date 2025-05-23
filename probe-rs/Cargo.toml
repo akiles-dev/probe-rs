@@ -54,9 +54,7 @@ object = { version = "0.37", default-features = false, features = [
 nusb = "0.1.12"
 futures-lite = { version = "2", default-features = false }
 scroll = "0.13"
-serialport = { version = "4.7.0", default-features = false, features = [
-    "usbportinfo-interface",
-] }
+serialport = { version = "4.7.0", default-features = false, features = [] }
 tracing = "0.1"
 uf2-decode = "0.2"
 espflash = { version = "4", default-features = false }
