@@ -1416,7 +1416,7 @@ fn black_magic_debug_port_info(
             info.vid,
             info.pid,
             info.serial_number.map(|s| s.to_string()),
-            info.interface,
+            None,
             info.product
                 .unwrap_or_else(|| "Black Magic Probe".to_string()),
         ),
