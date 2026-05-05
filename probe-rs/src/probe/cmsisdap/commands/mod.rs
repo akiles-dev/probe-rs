@@ -230,7 +230,16 @@ impl CmsisDapDevice {
     /// synchronised to requests. Swallows any errors, which are expected if
     /// there is no pending data to read.
     pub(super) fn drain(&self) {
-        tracing::debug!("Draining probe of any pending data.");
+        self.drain_for(Duration::from_millis(1));
+    }
+
+    /// Like [`drain`], but waits up to `per_read_timeout` for each read so that
+    /// late responses still in flight after a USB timeout get flushed.
+    pub(super) fn drain_for(&self, per_read_timeout: Duration) {
+        tracing::debug!(
+            "Draining probe of any pending data (per-read timeout {:?}).",
+            per_read_timeout
+        );
 
         match self {
             #[cfg(feature = "cmsisdap_v1")]
@@ -240,7 +249,8 @@ impl CmsisDapDevice {
                 ..
             } => loop {
                 let mut discard = vec![0u8; report_size + 1];
-                match handle.read_timeout(&mut discard, 1) {
+                let to_ms = per_read_timeout.as_millis().min(i32::MAX as u128) as i32;
+                match handle.read_timeout(&mut discard, to_ms) {
                     Ok(n) if n != 0 => continue,
                     _ => break,
                 }
@@ -252,10 +262,9 @@ impl CmsisDapDevice {
                 max_packet_size,
                 ..
             } => {
-                let timeout = Duration::from_millis(1);
                 let mut discard = vec![0u8; *max_packet_size];
                 loop {
-                    match handle.read_bulk(*in_ep, &mut discard, timeout) {
+                    match handle.read_bulk(*in_ep, &mut discard, per_read_timeout) {
                         Ok(n) if n != 0 => continue,
                         _ => break,
                     }
@@ -435,9 +444,19 @@ pub(crate) fn send_command<Req: Request>(
     device: &mut CmsisDapDevice,
     request: &Req,
 ) -> Result<Req::Response, CmsisDapError> {
-    send_command_inner(device, request).map_err(|e| CmsisDapError::Send {
-        command_id: Req::COMMAND_ID,
-        source: e,
+    send_command_inner(device, request).map_err(|e| {
+        // A failed send can leave the probe response in flight (e.g. a USB
+        // timeout where the probe replies after we gave up waiting), or leave
+        // us out of sync with the probe (e.g. a CommandIdMismatch where some
+        // earlier response got consumed by the wrong command). Drain so the
+        // stale data does not pollute the next request. Use the device's USB
+        // timeout per read so a late response that has not yet arrived still
+        // gets flushed.
+        device.drain_for(device.usb_timeout());
+        CmsisDapError::Send {
+            command_id: Req::COMMAND_ID,
+            source: e,
+        }
     })
 }
 
