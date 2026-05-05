@@ -15,7 +15,7 @@ use std::time::Duration;
 use self::general::host_status::HostStatusRequest;
 use self::swj::clock::SWJClockRequest;
 
-pub(crate) const DEFAULT_USB_TIMEOUT: Duration = Duration::from_millis(1000);
+pub(crate) const DEFAULT_USB_TIMEOUT: Duration = Duration::from_millis(5000);
 
 #[derive(Debug, thiserror::Error, docsplay::Display)]
 pub enum CmsisDapError {
