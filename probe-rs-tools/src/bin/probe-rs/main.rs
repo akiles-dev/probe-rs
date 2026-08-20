@@ -122,6 +122,7 @@ impl Cli {
             Subcommand::Info(cmd) => cmd.run(client).await,
             Subcommand::Gdb(cmd) => cmd.run(&mut *client.registry().await, &lister),
             Subcommand::Reset(cmd) => cmd.run(client).await,
+            Subcommand::CyclePower(cmd) => cmd.run(client).await,
             Subcommand::Debug(cmd) => cmd.run(client, utc_offset).await,
             Subcommand::Download(cmd) => cmd.run(client).await,
             Subcommand::Run(cmd) => cmd.run(client, utc_offset).await,
@@ -161,6 +162,8 @@ enum Subcommand {
     Info(cmd::info::Cmd),
     /// Resets the target attached to the selected debug probe
     Reset(cmd::reset::Cmd),
+    /// Cycle USB power to the selected debug probe's port
+    CyclePower(cmd::cycle_power::Cmd),
     /// Run a GDB server
     Gdb(cmd::gdb_server::Cmd),
     /// Basic command line debugger

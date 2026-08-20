@@ -5,6 +5,7 @@ pub mod cargo_flash;
 pub mod chip;
 pub mod common;
 pub mod complete;
+pub mod cycle_power;
 pub mod dap_server;
 pub mod debug;
 pub mod download;
