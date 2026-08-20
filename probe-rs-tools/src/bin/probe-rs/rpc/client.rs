@@ -32,15 +32,15 @@ use crate::{
         Key,
         functions::{
             AttachEndpoint, BuildEndpoint, ChipInfoEndpoint, CreateRttClientEndpoint,
-            CreateTempFileEndpoint, EraseEndpoint, FlashEndpoint, ListChipFamiliesEndpoint,
-            ListProbesEndpoint, ListTestsEndpoint, LoadChipFamilyEndpoint, MonitorEndpoint,
-            ProgressEventTopic, ReadMemory8Endpoint, ReadMemory16Endpoint, ReadMemory32Endpoint,
-            ReadMemory64Endpoint, ResetCoreAndHaltEndpoint, ResetCoreEndpoint,
-            ResumeAllCoresEndpoint, RpcResult, RttDownEndpoint, RunTestEndpoint,
-            SelectProbeEndpoint, TakeStackTraceEndpoint, TargetInfoDataTopic, TargetInfoEndpoint,
-            TargetNameEndpoint, TempFileDataEndpoint, TokioSpawner, VerifyEndpoint,
-            WriteMemory8Endpoint, WriteMemory16Endpoint, WriteMemory32Endpoint,
-            WriteMemory64Endpoint,
+            CreateTempFileEndpoint, CyclePowerEndpoint, EraseEndpoint, FlashEndpoint,
+            ListChipFamiliesEndpoint, ListProbesEndpoint, ListTestsEndpoint,
+            LoadChipFamilyEndpoint, MonitorEndpoint, ProgressEventTopic, ReadMemory8Endpoint,
+            ReadMemory16Endpoint, ReadMemory32Endpoint, ReadMemory64Endpoint,
+            ResetCoreAndHaltEndpoint, ResetCoreEndpoint, ResumeAllCoresEndpoint, RpcResult,
+            RttDownEndpoint, RunTestEndpoint, SelectProbeEndpoint, TakeStackTraceEndpoint,
+            TargetInfoDataTopic, TargetInfoEndpoint, TargetNameEndpoint, TempFileDataEndpoint,
+            TokioSpawner, VerifyEndpoint, WriteMemory8Endpoint, WriteMemory16Endpoint,
+            WriteMemory32Endpoint, WriteMemory64Endpoint,
             chip::{ChipData, ChipFamily, ChipInfoRequest, LoadChipFamilyRequest},
             file::{AppendFileRequest, TempFile},
             flash::{
@@ -51,8 +51,8 @@ use crate::{
             memory::{ReadMemoryRequest, WriteMemoryRequest},
             monitor::{MonitorExitReason, MonitorMode, MonitorOptions, MonitorRequest},
             probe::{
-                AttachRequest, AttachResult, DebugProbeEntry, DebugProbeSelector,
-                ListProbesRequest, SelectProbeRequest, SelectProbeResult,
+                AttachRequest, AttachResult, CyclePowerRequest, DebugProbeEntry,
+                DebugProbeSelector, ListProbesRequest, SelectProbeRequest, SelectProbeResult,
             },
             reset::{ResetCoreAndHaltRequest, ResetCoreRequest},
             resume::ResumeAllCoresRequest,
@@ -394,6 +394,20 @@ impl RpcClient {
 
     pub async fn attach_probe(&self, request: AttachRequest) -> anyhow::Result<AttachResult> {
         self.send_resp::<AttachEndpoint, _>(&request).await
+    }
+
+    pub async fn cycle_power(
+        &self,
+        probe: DebugProbeSelector,
+        off_duration: Duration,
+        reenumerate_timeout: Duration,
+    ) -> anyhow::Result<()> {
+        self.send_resp::<CyclePowerEndpoint, _>(&CyclePowerRequest {
+            probe,
+            off_duration,
+            reenumerate_timeout,
+        })
+        .await
     }
 
     pub async fn list_probes(&self) -> anyhow::Result<Vec<DebugProbeEntry>> {

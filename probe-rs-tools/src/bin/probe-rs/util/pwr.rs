@@ -17,6 +17,24 @@ pub async fn power_reset(selector: DebugProbeSelector, delay: Duration) -> Resul
     power_reset_impl(&dev, delay).await
 }
 
+/// Wait for a probe to (re)appear on the bus, e.g. after a power reset.
+pub async fn wait_for_device(selector: &DebugProbeSelector, timeout: Duration) -> Result<()> {
+    let deadline = tokio::time::Instant::now() + timeout;
+    loop {
+        if nusb::list_devices().await?.any(|d| selector.matches(&d)) {
+            // The device may need a moment after enumeration before it can be opened.
+            tokio::time::sleep(Duration::from_millis(500)).await;
+            return Ok(());
+        }
+        if tokio::time::Instant::now() > deadline {
+            return Err(anyhow!(
+                "device with selector {selector} did not reappear within {timeout:?}"
+            ));
+        }
+        tokio::time::sleep(Duration::from_millis(500)).await;
+    }
+}
+
 #[cfg(target_os = "linux")]
 /// Reset power on a probe
 async fn power_reset_impl(dev: &DeviceInfo, delay: Duration) -> Result<()> {

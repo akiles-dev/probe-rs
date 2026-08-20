@@ -21,8 +21,9 @@ use crate::{
             memory::{ReadMemoryRequest, WriteMemoryRequest, read_memory, write_memory},
             monitor::{MonitorRequest, MonitorResponse, RttEvent, SemihostingEvent, monitor},
             probe::{
-                AttachRequest, AttachResponse, ListProbesRequest, ListProbesResponse,
-                SelectProbeRequest, SelectProbeResponse, attach, list_probes, select_probe,
+                AttachRequest, AttachResponse, CyclePowerRequest, ListProbesRequest,
+                ListProbesResponse, SelectProbeRequest, SelectProbeResponse, attach, cycle_power,
+                list_probes, select_probe,
             },
             reset::{ResetCoreAndHaltRequest, ResetCoreRequest, reset, reset_and_halt},
             resume::{ResumeAllCoresRequest, resume_all_cores},
@@ -465,6 +466,7 @@ endpoints! {
     | ListProbesEndpoint        | ListProbesRequest       | ListProbesResponse      | "probe/list"       |
     | SelectProbeEndpoint       | SelectProbeRequest      | SelectProbeResponse     | "probe/select"     |
     | AttachEndpoint            | AttachRequest           | AttachResponse          | "probe/attach"     |
+    | CyclePowerEndpoint        | CyclePowerRequest       | NoResponse              | "probe/cycle_power" |
 
     | ResumeAllCoresEndpoint    | ResumeAllCoresRequest   | NoResponse              | "resume"           |
     | CreateRttClientEndpoint   | CreateRttClientRequest  | CreateRttClientResponse | "create_rtt"       |
@@ -536,6 +538,7 @@ postcard_rpc::define_dispatch! {
         | ListProbesEndpoint        | blocking  | list_probes       |
         | SelectProbeEndpoint       | async     | select_probe      |
         | AttachEndpoint            | async     | attach            |
+        | CyclePowerEndpoint        | async     | cycle_power       |
 
         | ResumeAllCoresEndpoint    | async     | resume_all_cores  |
         | CreateRttClientEndpoint   | async     | create_rtt_client |

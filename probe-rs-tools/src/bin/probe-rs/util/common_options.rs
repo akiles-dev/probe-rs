@@ -105,7 +105,8 @@ pub struct ProbeOptions {
     #[arg(long, env = "PROBE_RS_PROTOCOL", help_heading = "PROBE CONFIGURATION")]
     pub protocol: Option<WireProtocol>,
 
-    /// Whether to cycle usb power before run.
+    /// Whether to cycle usb power before run. Performed on the machine the probe
+    /// is attached to, so it also works against a remote server.
     #[arg(
         long,
         env = "PROBE_RS_CYCLE_POWER",

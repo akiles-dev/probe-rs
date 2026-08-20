@@ -29,7 +29,6 @@ use crate::rpc::functions::monitor::{ChannelInfo, MonitorExitReason};
 use crate::rpc::functions::stack_trace::StackTraceFrame;
 use crate::rpc::utils::run_loop::VectorCatchConfig;
 use crate::rpc::utils::semihosting::SemihostingOptions;
-use crate::util::pwr::power_reset;
 use crate::{
     FormatOptions,
     rpc::{
@@ -92,7 +91,13 @@ pub async fn attach_probe(
     let probe = select_probe(client, probe_options.probe.map(Into::into)).await?;
 
     if probe_options.cycle_power {
-        power_reset(probe.selector().into(), Duration::from_secs(1)).await?;
+        client
+            .cycle_power(
+                probe.selector(),
+                Duration::from_secs(1),
+                Duration::from_secs(10),
+            )
+            .await?;
     }
 
     let result = client

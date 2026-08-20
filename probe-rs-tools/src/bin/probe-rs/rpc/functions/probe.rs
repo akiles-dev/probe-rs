@@ -6,12 +6,16 @@ use serde::{Deserialize, Serialize};
 use crate::{
     rpc::{
         Key,
-        functions::{RpcContext, RpcResult},
+        functions::{NoResponse, RpcContext, RpcResult},
     },
-    util::common_options::{OperationError, ProbeOptions},
+    util::{
+        common_options::{OperationError, ProbeOptions},
+        pwr,
+    },
 };
 
 use std::fmt::Display;
+use std::time::Duration;
 
 // Separate from DebugProbeInfo because we can't serialize a &dyn ProbeFactory
 #[derive(Debug, Serialize, Deserialize, Clone, Schema)]
@@ -283,4 +287,25 @@ pub async fn attach(
     }
     let session_id = ctx.set_session(session, common_options.dry_run()).await;
     Ok(AttachResult::Success(session_id))
+}
+
+#[derive(Serialize, Deserialize, Schema)]
+pub struct CyclePowerRequest {
+    pub probe: DebugProbeSelector,
+    /// How long to keep port power off.
+    pub off_duration: Duration,
+    /// How long to wait for the probe to re-enumerate after power-on.
+    pub reenumerate_timeout: Duration,
+}
+
+/// Cycle USB power to the probe's port and wait for it to re-enumerate.
+pub async fn cycle_power(
+    _ctx: &mut RpcContext,
+    _header: VarHeader,
+    request: CyclePowerRequest,
+) -> NoResponse {
+    let selector: probe_rs::probe::DebugProbeSelector = request.probe.into();
+    pwr::power_reset(selector.clone(), request.off_duration).await?;
+    pwr::wait_for_device(&selector, request.reenumerate_timeout).await?;
+    Ok(())
 }
