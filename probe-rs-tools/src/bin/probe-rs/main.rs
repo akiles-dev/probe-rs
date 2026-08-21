@@ -215,7 +215,8 @@ impl Subcommand {
             | Self::Attach(_)
             | Self::Run(_)
             | Self::Erase(_)
-            | Self::Verify(_) => true,
+            | Self::Verify(_)
+            | Self::CyclePower(_) => true,
             Self::Mi(mi) => mi.is_remote_cmd(),
             _ => false,
         }
